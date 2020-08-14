@@ -12,7 +12,7 @@ from .agent import BaseAgent
 from .common import utils
 
 # one single experience step
-Experience = namedtuple('Experience', ['state', 'action', 'reward', 'done'])
+Experience = namedtuple('Experience', ['state', 'action', 'reward', 'done', 'rnn'], defaults=((np.zeros((1, 1, 512)), np.zeros((1,1,512))), ))
 
 
 class ExperienceSource:
@@ -155,7 +155,7 @@ def _group_list(items, lens):
 
 
 # those entries are emitted from ExperienceSourceFirstLast. Reward is discounted over the trajectory piece
-ExperienceFirstLast = collections.namedtuple('ExperienceFirstLast', ('state', 'action', 'reward', 'last_state'))
+ExperienceFirstLast = collections.namedtuple('ExperienceFirstLast', ('state', 'action', 'reward', 'last_state', 'rnn'), defaults=((np.zeros((1, 1, 512)), np.zeros((1,1,512))),))
 
 
 class ExperienceSourceFirstLast(ExperienceSource):
@@ -184,8 +184,11 @@ class ExperienceSourceFirstLast(ExperienceSource):
             for e in reversed(elems):
                 total_reward *= self.gamma
                 total_reward += e.reward
+    
+                hidden = np.stack(exp[0].rnn).reshape(2, -1)
+        
             yield ExperienceFirstLast(state=exp[0].state, action=exp[0].action,
-                                      reward=total_reward, last_state=last_state)
+                                      reward=total_reward, last_state=last_state, rnn=hidden)
 
 
 def discount_with_dones(rewards, dones, gamma):
@@ -465,6 +468,50 @@ class PrioritizedReplayBuffer(ExperienceReplayBuffer):
             self._it_min[idx] = priority ** self._alpha
 
             self._max_priority = max(self._max_priority, priority)
+            
+            
+class RNNReplayBuffer:
+    def __init__(self, experience, buffer_size):
+        self.experience_iter = None if experience is None else iter(experience)
+        self.buffer = []
+        self.capacity = buffer_size
+        self.current_pos = 0
+        self.episode_buffer = []
+        self.steps = experience.steps
+        
+    def __len__(self):
+        return len(self.buffer)
+        
+    def __iter__(self):
+        return iter(self.buffer)
+        
+    def sample(self, batch, trace_length):
+        p = np.array([len(episode) for episode in self.buffer])
+        p = p / p.sum()
+        sampled_episodes = np.random.choice(np.arange(len(self.buffer)), batch, p=p)
+        batch = []
+        for episode_idx in sampled_episodes:
+            epi = self.buffer[episode_idx]
+            start = np.random.randint(0, len(epi) - trace_length)
+            transitions = epi[start:start + trace_length]
+            batch.append(ExperienceFirstLast(*zip(*transitions)))
+        
+        return batch
+
+        
+    def populate(self, samples):
+        for _ in range(samples):
+            sample = next(self.experience_iter)
+            self.episode_buffer.append(sample)
+        if np.all([ls.last_state is None for ls in self.episode_buffer[-self.steps:]]):
+            if len(self.buffer) < self.capacity:
+                self.buffer.append(self.episode_buffer)
+            else:
+                self.buffer[self.current_pos] = self.episode_buffer
+            
+            self.episode_buffer = []
+        
+            self.current_pos = (self.current_pos + 1) % self.capacity
 
 
 class BatchPreprocessor:
