@@ -12,7 +12,7 @@ from .agent import BaseAgent
 from .common import utils
 
 # one single experience step
-Experience = namedtuple('Experience', ['state', 'action', 'reward', 'done', 'rnn'], defaults=((np.zeros((1, 1, 512)), np.zeros((1,1,512))), ))
+Experience = namedtuple('Experience', ['state', 'action', 'reward', 'done', 'rnn'], defaults=((np.zeros((1, 1, 128)), np.zeros((1,1,128))), ))
 
 
 class ExperienceSource:
@@ -155,7 +155,7 @@ def _group_list(items, lens):
 
 
 # those entries are emitted from ExperienceSourceFirstLast. Reward is discounted over the trajectory piece
-ExperienceFirstLast = collections.namedtuple('ExperienceFirstLast', ('state', 'action', 'reward', 'last_state', 'rnn'), defaults=((np.zeros((1, 1, 512)), np.zeros((1,1,512))),))
+ExperienceFirstLast = collections.namedtuple('ExperienceFirstLast', ('state', 'action', 'reward', 'last_state', 'rnn'), defaults=((np.zeros((1, 1, 128)), np.zeros((1,1,128))),))
 
 
 class ExperienceSourceFirstLast(ExperienceSource):
@@ -486,12 +486,19 @@ class RNNReplayBuffer:
         return iter(self.buffer)
         
     def sample(self, batch, trace_length):
+        #print("TL: ", trace_length)
         p = np.array([len(episode) for episode in self.buffer])
         p = p / p.sum()
         sampled_episodes = np.random.choice(np.arange(len(self.buffer)), batch, p=p)
         batch = []
         for episode_idx in sampled_episodes:
             epi = self.buffer[episode_idx]
+            #print("IDX: ", episode_idx)
+            print("EPI: ", epi)
+            #TODO: Support smaler trace_lengths
+           # while len(epi) - trace_length < 1:
+           #     epi.append(ExperienceFirstLast(None,))
+            
             start = np.random.randint(0, len(epi) - trace_length)
             transitions = epi[start:start + trace_length]
             batch.append(ExperienceFirstLast(*zip(*transitions)))

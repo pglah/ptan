@@ -77,12 +77,11 @@ class DQNAgent(BaseAgent):
         return actions, agent_states
     
 class RDQNAgent(BaseAgent):
-    def __init__(self, dqn_model, action_selector, batch_size, trace_length, device="cpu", preprocessor=default_states_preprocessor):
+    def __init__(self, dqn_model, action_selector, batch_size, device="cpu", preprocessor=default_states_preprocessor):
         self.dqn_model = dqn_model
         self.action_selector = action_selector
         self.preprocessor = preprocessor
         self.batch_size = batch_size
-        self.trace_length = trace_length
         self.device = device
 
     @torch.no_grad()
