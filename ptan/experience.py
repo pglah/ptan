@@ -13,6 +13,7 @@ from .common import utils
 
 # one single experience step
 Experience = namedtuple('Experience', ['state', 'action', 'reward', 'done', 'rnn'], defaults=((np.zeros((1, 1, 128)), np.zeros((1,1,128))), ))
+Obs_space = 32
 
 
 class ExperienceSource:
@@ -494,10 +495,16 @@ class RNNReplayBuffer:
         for episode_idx in sampled_episodes:
             epi = self.buffer[episode_idx]
             #print("IDX: ", episode_idx)
-            #print("EPI: ", epi)
             #TODO: Support smaler trace_lengths
-           # while len(epi) - trace_length < 1:
-           #     epi.append(ExperienceFirstLast(None,))
+            while len(epi) - trace_length < 1:
+                state = np.full((Obs_space,), 999.0, dtype=np.float32)
+                action = 999
+                reward = 999.0
+                last_state = np.full((Obs_space,), 999.0, dtype=np.float32)
+                rnn = np.full((2, 128), 999.0)
+                epi.append(ExperienceFirstLast(state, action, reward, last_state, rnn))
+            
+            print("EPI: ", epi)
             
             start = np.random.randint(0, len(epi) - trace_length)
             transitions = epi[start:start + trace_length]
