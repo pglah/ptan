@@ -12,7 +12,8 @@ from .agent import BaseAgent
 from .common import utils
 
 # one single experience step
-Experience = namedtuple('Experience', ['state', 'action', 'reward', 'done', 'rnn'], defaults=((np.zeros((1, 1, 128)), np.zeros((1,1,128))), ))
+Experience = namedtuple('Experience', ['state', 'action', 'reward', 'done', 'rnn'])
+Experience.__new__.__defaults__ = ((np.zeros((1, 1, 128)), np.zeros((1,1,128))), )
 Obs_space = 32
 
 
@@ -156,7 +157,8 @@ def _group_list(items, lens):
 
 
 # those entries are emitted from ExperienceSourceFirstLast. Reward is discounted over the trajectory piece
-ExperienceFirstLast = collections.namedtuple('ExperienceFirstLast', ('state', 'action', 'reward', 'last_state', 'rnn'), defaults=((np.zeros((1, 1, 128)), np.zeros((1,1,128))),))
+ExperienceFirstLast = collections.namedtuple('ExperienceFirstLast', ('state', 'action', 'reward', 'last_state', 'rnn'))
+ExperienceFirstLast.__new__.__defaults__ = ((np.zeros((1, 1, 128)), np.zeros((1,1,128))), )
 
 
 class ExperienceSourceFirstLast(ExperienceSource):
