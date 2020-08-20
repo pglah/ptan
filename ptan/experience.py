@@ -496,15 +496,15 @@ class RNNReplayBuffer:
             epi = self.buffer[episode_idx]
             #print("IDX: ", episode_idx)
             #TODO: Support smaler trace_lengths
-            while len(epi) - trace_length < 1:
-                state = np.full((Obs_space,), 999.0, dtype=np.float32)
-                action = 999
-                reward = 999.0
-                last_state = np.full((Obs_space,), 999.0, dtype=np.float32)
-                rnn = np.full((2, 128), 999.0)
-                epi.append(ExperienceFirstLast(state, action, reward, last_state, rnn))
+            # while len(epi) - trace_length < 1:
+            #     state = np.full((Obs_space,), 999.0, dtype=np.float32)
+            #     action = 999
+            #     reward = 999.0
+            #     last_state = np.full((Obs_space,), 999.0, dtype=np.float32)
+            #     rnn = np.full((2, 128), 999.0)
+            #     epi.append(ExperienceFirstLast(state, action, reward, last_state, rnn))
             
-            print("EPI: ", epi)
+            # print("EPI: ", epi)
             
             start = np.random.randint(0, len(epi) - trace_length)
             transitions = epi[start:start + trace_length]
