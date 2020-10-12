@@ -13,7 +13,7 @@ from .common import utils
 
 # one single experience step
 Experience = namedtuple('Experience', ['state', 'action', 'reward', 'done', 'rnn'])
-Experience.__new__.__defaults__ = ((np.zeros((1, 1, 128)), np.zeros((1,1,128))), )
+Experience.__new__.__defaults__ = ((np.zeros((1, 1, 64)), np.zeros((1,1, 64))), )
 Obs_space = 32
 
 
