@@ -4,7 +4,7 @@ PTAN stands for PyTorch AgentNet -- reimplementation of AgentNet library for pyt
 import setuptools
 
 
-requirements = ['torch', 'gym', 'atari-py', 'numpy'] #opencv-python is needed, but can't be installed using pip on jetson
+requirements = ['torch', 'gym', 'numpy'] #opencv-python is needed, but can't be installed using pip on jetson
 
 
 setuptools.setup(
